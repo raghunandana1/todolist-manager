@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burrow — cozy task list</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F2F0FA;
+    --surface: #FFFFFF;
+    --surface-alt: #F8F4FF;
+    --ink: #3A3358;
+    --ink-soft: #756B94;
+    --ink-faint: #B0A8C9;
+    --line: #E5DEF6;
+    --line-soft: #EEE9FA;
+    --pink: #FF8FAB;
+    --pink-deep: #E14E76;
+    --pink-soft: #FFE3EC;
+    --mint: #4FAF7C;
+    --mint-soft: #DFF5E9;
+    --amber: #C17D0F;
+    --amber-soft: #FFEFD4;
+    --coral: #E0503F;
+    --coral-soft: #FFE1DC;
+    --cream: #FFF8EF;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Nunito', ui-sans-serif, sans-serif;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 44px 20px 80px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  .page { width: 100%; max-width: 600px; position: relative; z-index: 1; }
+
+  .masthead {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+  .mascot-wrap {
+    width: 84px;
+    height: 84px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .mascot-wrap svg { width: 68px; height: 68px; }
+  .mascot-svg { display: none; }
+  .mascot-svg.active { display: block; }
+
+  .masthead-text { flex: 1; min-width: 0; }
+  .masthead h1 {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .speech-bubble {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    padding: 7px 13px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    display: inline-block;
+    position: relative;
+    font-weight: 600;
+  }
+
+  .composer {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .composer-row1 { display: flex; gap: 10px; margin-bottom: 12px; }
+  #title-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--ink);
+    outline: none;
+    padding: 4px 2px;
+  }
+  #title-input::placeholder { color: var(--ink-faint); font-weight: 500; }
+
+  .composer-row2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pace-picker { display: flex; gap: 6px; }
+  .pace-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface-alt);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 5px 11px 5px 7px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .pace-btn svg { width: 18px; height: 18px; }
+  .pace-btn.selected.turtle { background: var(--mint-soft); border-color: var(--mint); color: var(--mint); }
+  .pace-btn.selected.fox { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+  .pace-btn.selected.hare { background: var(--coral-soft); border-color: var(--coral); color: var(--coral); }
+
+  input[type="date"], select {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--surface-alt);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 5px 10px;
+    outline: none;
+  }
+
+  .add-btn {
+    margin-left: auto;
+    background: var(--pink);
+    color: #fff;
+    border: none;
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .add-btn:hover { background: var(--pink-deep); }
+  .add-btn:disabled { opacity: 0.4; cursor: default; background: var(--pink); }
+
+  .view-toggles { display: flex; gap: 8px; margin-bottom: 20px; }
+  .view-btn {
+    flex: 1;
+    background: var(--surface-alt);
+    border: 2px solid var(--line);
+    color: var(--ink-soft);
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    padding: 8px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .view-btn.active {
+    background: var(--surface);
+    border-color: var(--pink);
+    color: var(--pink-deep);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .tabs { display: flex; gap: 4px; background: var(--surface-alt); border-radius: 20px; padding: 3px; }
+  .tab {
+    background: none;
+    border: none;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink-faint);
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 16px;
+  }
+  .tab.active { color: #fff; background: var(--pink); }
+  .tab .count { opacity: 0.8; margin-left: 3px; }
+
+  .search-sort { display: flex; gap: 8px; align-items: center; }
+  #search-input {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 12px;
+    outline: none;
+    width: 130px;
+  }
+  #search-input::placeholder { color: var(--ink-faint); }
+  #sort-select {
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 6px 10px;
+    color: var(--ink-soft);
+    outline: none;
+  }
+
+  .list {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--line-soft);
+    position: relative;
+    transition: all 0.2s;
+  }
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: var(--surface-alt); }
+
+  /* Deadline Warning Animation */
+  @keyframes pulse-warn { 
+    0% { box-shadow: 0 0 0 0 rgba(224, 80, 63, 0.4); } 
+    70% { box-shadow: 0 0 0 6px rgba(224, 80, 63, 0); } 
+    100% { box-shadow: 0 0 0 0 rgba(224, 80, 63, 0); } 
+  }
+  .row.deadline-warning { border-left: 4px solid var(--coral); background: #FFF5F5; }
+  .row.deadline-warning .chip.due { animation: pulse-warn 1.5s infinite; }
+
+  .checkbox {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    margin-top: 1px;
+    cursor: pointer;
+    display: block;
+  }
+  .checkbox circle {
+    fill: var(--surface-alt);
+    stroke: var(--ink-faint);
+    stroke-width: 2;
+  }
+  .row.completed .checkbox circle { stroke: var(--pink); fill: var(--pink-soft); }
+  .checkbox path {
+    fill: none;
+    stroke: var(--pink-deep);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    transition: stroke-dashoffset 0.2s ease;
+  }
+  .row.completed .checkbox path { stroke-dashoffset: 0; }
+
+  .row-body { flex: 1; min-width: 0; }
+  .row-title {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 600;
+    font-size: 15.5px;
+    color: var(--ink);
+    line-height: 1.4;
+    outline: none;
+    cursor: text;
+    word-break: break-word;
+  }
+  .row.completed .row-title {
+    color: var(--ink-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--ink-faint);
+  }
+
+  .row-meta { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .pace-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px 2px 4px;
+    border-radius: 20px;
+  }
+  .pace-chip svg { width: 15px; height: 15px; }
+  .pace-chip.turtle { background: var(--mint-soft); color: var(--mint); }
+  .pace-chip.fox { background: var(--amber-soft); color: var(--amber); }
+  .pace-chip.hare { background: var(--coral-soft); color: var(--coral); }
+
+  .chip.due {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--surface-alt);
+    color: var(--ink-soft);
+  }
+  .chip.due.overdue { background: var(--coral-soft); color: var(--coral); }
+  .chip.due.today { background: var(--amber-soft); color: var(--amber); }
+
+  .chip.recur {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--line);
+    color: var(--ink);
+  }
+
+  .row-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.1s; flex-shrink: 0; }
+  .row:hover .row-actions { opacity: 1; }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 8px;
+    display: flex;
+  }
+  .icon-btn:hover { color: var(--coral); background: var(--coral-soft); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  .empty-state { padding: 40px 24px 44px; text-align: center; }
+  .empty-state .empty-mascot { width: 90px; height: 90px; margin: 0 auto 10px; }
+  .empty-state .glyph {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .empty-state p { font-size: 13px; color: var(--ink-faint); margin: 0; font-weight: 600; }
+
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding: 0 6px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+  .clear-btn {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-family: 'Nunito', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .clear-btn:hover { color: var(--coral); }
+
+  .confetti-piece {
+    position: fixed;
+    top: -20px;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 50;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(360deg); opacity: 0.9; }
+  }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap;
+  }
+
+  /* Calendar View Styles */
+  #calendar-view {
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 18px;
+    padding: 16px;
+    display: none;
+  }
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .cal-header button {
+    background: var(--surface-alt); border: 2px solid var(--line);
+    border-radius: 8px; padding: 4px 12px; cursor: pointer; color: var(--ink);
+    font-weight: bold;
+  }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-day-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    padding-bottom: 4px;
+  }
+  .cal-cell {
+    background: var(--bg);
+    border: 2px solid var(--line-soft);
+    border-radius: 8px;
+    min-height: 80px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cal-cell.today { border-color: var(--amber); background: var(--amber-soft); }
+  .cal-day-num { font-size: 11px; font-weight: 700; color: var(--ink-faint); margin-bottom: 4px; text-align: right; }
+  .cal-task {
+    font-size: 10px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 2px 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 600;
+  }
+  .cal-task.completed { opacity: 0.5; text-decoration: line-through; }
+  .cal-task.overdue { border-color: var(--coral); color: var(--coral); }
+
+  @media (max-width: 480px) {
+    .masthead h1 { font-size: 23px; }
+    .mascot-wrap { width: 66px; height: 66px; }
+    .mascot-wrap svg { width: 52px; height: 52px; }
+    .add-btn { margin-left: 0; order: 5; width: 100%; margin-top: 4px; }
+    .search-sort { width: 100%; }
+    #search-input { flex: 1; width: auto; }
+    .cal-grid { gap: 2px; }
+    .cal-cell { min-height: 60px; padding: 2px; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="sr-only">Burrow, a cozy task list</h1>
+
+<div class="page">
+  <div class="masthead">
+    <div class="mascot-wrap">
+      <!-- Mascot SVGs (Idle, Happy, Sleepy) -->
+      <svg class="mascot-svg" id="mascot-idle" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="58" cy="46" rx="12" ry="22" fill="#FFF8EF" stroke="#3A3358" stroke-width="3"/>
+        <ellipse cx="102" cy="46" rx="12" ry="22" fill="#FFF8EF" stroke="#3A3358" stroke-width="3"/>
+        <ellipse cx="58" cy="48" rx="6" ry="13" fill="#FFE3EC"/>
+        <ellipse cx="102" cy="48" rx="6" ry="13" fill="#FFE3EC"/>
+        <circle cx="80" cy="96" r="46" fill="#FFF8EF" stroke="#3A3358" stroke-width="3"/>
+        <circle cx="60" cy="102" r="7" fill="#FFE3EC"/>
+        <circle cx="100" cy="102" r="7" fill="#FFE3EC"/>
+        <circle cx="65" cy="90" r="4.2" fill="#3A3358"/>
+        <circle cx="95" cy="90" r="4.2" fill="#3A3358"/>
+        <path d="M75 104 Q80 109 85 104" stroke="#3A3358" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <ellipse cx="80" cy="97" rx="4" ry="3" fill="#E14E76"/>
+      </svg>
+      <svg class="mascot-svg" id="mascot-happy" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="52" cy="38" rx="12" ry="22" fill="#FFF8EF" stroke="#3A3358" stroke-width="3" transform="rotate(-18 52 38)"/>
+        <ellipse cx="108" cy="38" rx="12" ry="22" fill="#FFF8EF" stroke="#3A3358" stroke-width="3" transform="rotate(18 108 38)"/>
+        <ellipse cx="52" cy="40" rx="6" ry="13" fill="#FFE3EC" transform="rotate(-18 52 40)"/>
+        <ellipse cx="108" cy="40" rx="6" ry="13" fill="#FFE3EC" transform="rotate(18 108 40)"/>
+        <circle cx="80" cy="96" r="46" fill="#FFF8EF" stroke="#3A3358" stroke-width="3"/>
+        <circle cx="60" cy="102" r="7" fill="#FFE3EC"/>
+        <circle cx="100" cy="102" r="7" fill="#FFE3EC"/>
+        <path d="M60 88 Q65 82 70 88" stroke="#3A3358" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M90 88 Q95 82 100 88" stroke="#3A3358" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M70 102 Q80 113 90 102" stroke="#3A3358" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <ellipse cx="80" cy="97" rx="4" ry="3" fill="#E14E76"/>
+        <path d="M22 60 l6 -10 M138 60 l-6 -10 M20 92 l8 -4 M140 92 l-8 -4" stroke="#FFB648" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      <svg class="mascot-svg" id="mascot-sleepy" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="60" rx="11" ry="20" fill="#FFF8EF" stroke="#3A3358" stroke-width="3" transform="rotate(-35 60 60)"/>
+        <ellipse cx="100" cy="60" rx="11" ry="20" fill="#FFF8EF" stroke="#3A3358" stroke-width="3" transform="rotate(35 100 60)"/>
+        <circle cx="80" cy="100" r="44" fill="#FFF8EF" stroke="#3A3358" stroke-width="3"/>
+        <circle cx="61" cy="105" r="6.5" fill="#FFE3EC"/>
+        <circle cx="99" cy="105" r="6.5" fill="#FFE3EC"/>
+        <path d="M58 96 Q65 100 72 96" stroke="#3A3358" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M88 96 Q95 100 102 96" stroke="#3A3358" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <ellipse cx="80" cy="106" rx="3.5" ry="2.6" fill="#E14E76"/>
+        <text x="112" y="52" font-family="'Baloo 2', sans-serif" font-size="15" fill="#B0A8C9" font-weight="700">z</text>
+        <text x="122" y="40" font-family="'Baloo 2', sans-serif" font-size="11" fill="#B0A8C9" font-weight="700">z</text>
+      </svg>
+    </div>
+    <div class="masthead-text">
+      <h1>Burrow</h1>
+      <div class="speech-bubble" id="speech-bubble">Add your first task below.</div>
+    </div>
+  </div>
+
+  <div class="view-toggles">
+    <button class="view-btn active" data-view="list">List View</button>
+    <button class="view-btn" data-view="calendar">Calendar View</button>
+  </div>
+
+  <div class="composer">
+    <div class="composer-row1">
+      <input id="title-input" type="text" placeholder="What's hopping today?" autocomplete="off" />
+    </div>
+    <div class="composer-row2">
+      <div class="pace-picker" id="pace-picker">
+        <button type="button" class="pace-btn turtle" data-pace="turtle">
+          <svg viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="8" ry="6" fill="#4FAF7C"/><circle cx="18" cy="10" r="3" fill="#4FAF7C"/><circle cx="19" cy="9.3" r="0.7" fill="#1F3D2A"/></svg>
+          <span>Turtle</span>
+        </button>
+        <button type="button" class="pace-btn fox selected" data-pace="fox">
+          <svg viewBox="0 0 24 24"><path d="M6 8l3 3M18 8l-3 3" stroke="#C17D0F" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="13" r="7" fill="#FFB648"/><path d="M8 16q4 3 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="9.3" cy="11.5" r="1" fill="#3A3358"/><circle cx="14.7" cy="11.5" r="1" fill="#3A3358"/><path d="M12 13.5l-1.3 1.5h2.6z" fill="#3A3358"/></svg>
+          <span>Fox</span>
+        </button>
+        <button type="button" class="pace-btn hare" data-pace="hare">
+          <svg viewBox="0 0 24 24"><ellipse cx="9" cy="5" rx="2" ry="5" fill="#E0503F" transform="rotate(-14 9 5)"/><ellipse cx="15" cy="5" rx="2" ry="5" fill="#E0503F" transform="rotate(14 15 5)"/><circle cx="12" cy="14" r="7" fill="#E0503F"/><circle cx="9.7" cy="13" r="1" fill="#3A3358"/><circle cx="14.3" cy="13" r="1" fill="#3A3358"/><path d="M12 15l-1.2 1.3h2.4z" fill="#3A3358"/></svg>
+          <span>Hare</span>
+        </button>
+      </div>
+      <input id="due-input" type="date" />
+      <select id="recur-input">
+        <option value="">No Repeat</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+      <button class="add-btn" id="add-btn" disabled>Add task</button>
+    </div>
+  </div>
+
+  <div id="list-wrapper">
+    <div class="controls">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-filter="all">All <span class="count" id="count-all">0</span></button>
+        <button class="tab" data-filter="active">Active <span class="count" id="count-active">0</span></button>
+        <button class="tab" data-filter="completed">Done <span class="count" id="count-completed">0</span></button>
+      </div>
+      <div class="search-sort">
+        <input id="search-input" type="text" placeholder="Search tasks..." autocomplete="off" />
+        <select id="sort-select">
+          <option value="created">newest</option>
+          <option value="due">by due date</option>
+          <option value="priority">by pace</option>
+        </select>
+      </div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="footer">
+      <span id="footer-summary">0 tasks</span>
+      <button class="clear-btn" id="clear-done-btn">Clear completed</button>
+    </div>
+  </div>
+
+  <div id="calendar-view">
+    <div class="cal-header">
+      <button id="cal-prev">&lt;</button>
+      <span id="cal-month-label">Month Year</span>
+      <button id="cal-next">&gt;</button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  var STORAGE_KEY = 'burrow-tasks-v2';
+  var tasks = [];
+  var filter = 'all';
+  var searchTerm = '';
+  var sortMode = 'created';
+  var selectedPace = 'fox';
+  var wasAllComplete = false;
+  var currentView = 'list';
+  var calendarDate = new Date(); // Date driving the calendar view
+
+  var list = document.getElementById('list');
+  var listWrapper = document.getElementById('list-wrapper');
+  var calendarView = document.getElementById('calendar-view');
+  var titleInput = document.getElementById('title-input');
+  var dueInput = document.getElementById('due-input');
+  var recurInput = document.getElementById('recur-input');
+  var addBtn = document.getElementById('add-btn');
+  var searchInput = document.getElementById('search-input');
+  var sortSelect = document.getElementById('sort-select');
+  var tabsEl = document.getElementById('tabs');
+  var pacePicker = document.getElementById('pace-picker');
+  var clearBtn = document.getElementById('clear-done-btn');
+  var footerSummary = document.getElementById('footer-summary');
+  var speechBubble = document.getElementById('speech-bubble');
+  var viewBtns = document.querySelectorAll('.view-btn');
+
+  var paceRank = { hare: 0, fox: 1, turtle: 2 };
+  var paceLabel = { hare: 'Hare', fox: 'Fox', turtle: 'Turtle' };
+
+  var paceIcons = {
+    turtle: '<svg viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="8" ry="6" fill="#4FAF7C"/><circle cx="18" cy="10" r="3" fill="#4FAF7C"/><circle cx="19" cy="9.3" r="0.7" fill="#1F3D2A"/></svg>',
+    fox: '<svg viewBox="0 0 24 24"><path d="M6 8l3 3M18 8l-3 3" stroke="#C17D0F" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="13" r="7" fill="#FFB648"/><path d="M8 16q4 3 8 0" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="9.3" cy="11.5" r="1" fill="#3A3358"/><circle cx="14.7" cy="11.5" r="1" fill="#3A3358"/><path d="M12 13.5l-1.3 1.5h2.6z" fill="#3A3358"/></svg>',
+    hare: '<svg viewBox="0 0 24 24"><ellipse cx="9" cy="5" rx="2" ry="5" fill="#E0503F" transform="rotate(-14 9 5)"/><ellipse cx="15" cy="5" rx="2" ry="5" fill="#E0503F" transform="rotate(14 15 5)"/><circle cx="12" cy="14" r="7" fill="#E0503F"/><circle cx="9.7" cy="13" r="1" fill="#3A3358"/><circle cx="14.3" cy="13" r="1" fill="#3A3358"/><path d="M12 15l-1.2 1.3h2.4z" fill="#3A3358"/></svg>'
+  };
+
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function save() {
+    if (window.storage) window.storage.set(STORAGE_KEY, JSON.stringify(tasks), false).catch(function(e){});
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }
+
+  function load() {
+    if (window.storage) {
+      window.storage.get(STORAGE_KEY, false).then(function(res) {
+        if (res && res.value) { try { tasks = JSON.parse(res.value); } catch(e) { tasks = []; } }
+        render();
+      }).catch(function() { render(); });
+    } else {
+      var stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) { try { tasks = JSON.parse(stored); } catch(e) { tasks = []; } }
+      render();
+    }
+  }
+
+  function esc(s) {
+    var div = document.createElement('div'); div.textContent = s; return div.innerHTML;
+  }
+
+  function formatDue(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function dueStatus(dateStr) {
+    if (!dateStr) return '';
+    var today = todayStr();
+    if (dateStr < today) return 'overdue';
+    if (dateStr === today) return 'today';
+    return 'future';
+  }
+
+  function checkboxSvg() {
+    return '<svg class="checkbox" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="10" cy="10" r="8.5"></circle><path d="M5.5 10.2l2.7 2.7 6-6.4"></path></svg>';
+  }
+
+  function trashSvg() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+  }
+
+  function setMascot(state) {
+    ['idle', 'happy', 'sleepy'].forEach(function(s) {
+      document.getElementById('mascot-' + s).classList.toggle('active', s === state);
+    });
+  }
+
+  function updateMascotAndBubble() {
+    var total = tasks.length;
+    var pending = tasks.filter(function(t) { return !t.completed; }).length;
+    if (total === 0) {
+      setMascot('sleepy');
+      speechBubble.textContent = 'Add your first task below.';
+      wasAllComplete = false; return;
+    }
+    if (pending === 0) {
+      setMascot('happy');
+      speechBubble.textContent = total === 1 ? 'All done! Great work.' : 'All ' + total + ' done! Great work.';
+      if (!wasAllComplete) fireConfetti();
+      wasAllComplete = true; return;
+    }
+    wasAllComplete = false;
+    setMascot('idle');
+    speechBubble.textContent = pending === 1 ? 'One task left to hop through.' : pending + ' tasks left to hop through.';
+  }
+
+  function fireConfetti() {
+    var colors = ['#FF8FAB', '#FFB648', '#4FAF7C', '#8FA6FF', '#E0503F'];
+    for (var i = 0; i < 26; i++) {
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
+      piece.style.opacity = String(0.8 + Math.random() * 0.2);
+      document.body.appendChild(piece);
+      (function(el) { setTimeout(function() { el.remove(); }, 3200); })(piece);
+    }
+  }
+
+  function getFiltered() {
+    var out = tasks.slice();
+    if (filter === 'active') out = out.filter(function(t) { return !t.completed; });
+    if (filter === 'completed') out = out.filter(function(t) { return t.completed; });
+    
+    // Search enhancement: fuzzy/keyword based search
+    if (searchTerm.trim()) {
+      var keywords = searchTerm.trim().toLowerCase().split(/\s+/);
+      out = out.filter(function(t) {
+        var titleLower = t.title.toLowerCase();
+        // Return true if ALL keywords are found anywhere in the title
+        return keywords.every(function(kw) { return titleLower.indexOf(kw) !== -1; });
+      });
+    }
+
+    if (sortMode === 'created') {
+      out.sort(function(a, b) { return b.createdAt - a.createdAt; });
+    } else if (sortMode === 'due') {
+      out.sort(function(a, b) {
+        if (!a.dueDate && !b.dueDate) return b.createdAt - a.createdAt;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate < b.dueDate ? -1 : 1;
+      });
+    } else if (sortMode === 'priority') {
+      out.sort(function(a, b) {
+        var pa = paceRank[a.pace] !== undefined ? paceRank[a.pace] : 3;
+        var pb = paceRank[b.pace] !== undefined ? paceRank[b.pace] : 3;
+        if (pa !== pb) return pa - pb;
+        return b.createdAt - a.createdAt;
+      });
+    }
+    return out;
+  }
+
+  function renderList() {
+    var filtered = getFiltered();
+    document.getElementById('count-all').textContent = tasks.length;
+    document.getElementById('count-active').textContent = tasks.filter(function(t) { return !t.completed; }).length;
+    document.getElementById('count-completed').textContent = tasks.filter(function(t) { return t.completed; }).length;
+    var pendingTotal = tasks.filter(function(t) { return !t.completed; }).length;
+    footerSummary.textContent = tasks.length === 0 ? '0 tasks' : pendingTotal + ' of ' + tasks.length + ' remaining';
+
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="glyph">Nothing here</div><p>No tasks match this view.</p></div>';
+      return;
+    }
+
+    filtered.forEach(function(t) {
+      var row = document.createElement('div');
+      row.className = 'row' + (t.completed ? ' completed' : '');
+      
+      var status = dueStatus(t.dueDate);
+      if (!t.completed && (status === 'overdue' || status === 'today')) {
+        row.classList.add('deadline-warning');
+      }
+
+      var pace = t.pace || 'fox';
+      var metaHtml = '<span class="pace-chip ' + pace + '">' + paceIcons[pace] + paceLabel[pace] + '</span>';
+      if (t.dueDate) {
+        metaHtml += '<span class="chip due' + (status === 'overdue' && !t.completed ? ' overdue' : status === 'today' && !t.completed ? ' today' : '') + '">' + formatDue(t.dueDate) + '</span>';
+      }
+      if (t.recur && t.recur !== '') {
+        metaHtml += '<span class="chip recur">↻ ' + (t.recur.charAt(0).toUpperCase() + t.recur.slice(1)) + '</span>';
+      }
+
+      row.innerHTML =
+        checkboxSvg() +
+        '<div class="row-body">' +
+          '<div class="row-title" contenteditable="true" spellcheck="false">' + esc(t.title) + '</div>' +
+          '<div class="row-meta">' + metaHtml + '</div>' +
+        '</div>' +
+        '<div class="row-actions"><button class="icon-btn" data-action="delete">' + trashSvg() + '</button></div>';
+
+      row.querySelector('.checkbox').addEventListener('click', function() { toggleTask(t.id); });
+      var titleEl = row.querySelector('.row-title');
+      titleEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); titleEl.blur(); } });
+      titleEl.addEventListener('blur', function() {
+        var newTitle = titleEl.textContent.trim();
+        if (newTitle && newTitle !== t.title) updateTitle(t.id, newTitle);
+        else titleEl.textContent = t.title;
+      });
+      row.querySelector('[data-action="delete"]').addEventListener('click', function() { deleteTask(t.id); });
+      list.appendChild(row);
+    });
+  }
+
+  function renderCalendar() {
+    var year = calendarDate.getFullYear();
+    var month = calendarDate.getMonth();
+    
+    document.getElementById('cal-month-label').textContent = new Date(year, month, 1).toLocaleDateString('en-US', {month: 'long', year: 'numeric'});
+    
+    var firstDay = new Date(year, month, 1).getDay(); // 0-6
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+
+    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(function(d) {
+      var hd = document.createElement('div'); hd.className = 'cal-day-header'; hd.textContent = d;
+      grid.appendChild(hd);
+    });
+
+    for(var i=0; i<firstDay; i++) {
+      grid.appendChild(document.createElement('div')); // empty blocks
+    }
+
+    for(var day=1; day<=daysInMonth; day++) {
+      var cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      var dateStr = year + '-' + String(month+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+      if (dateStr === todayStr()) cell.classList.add('today');
+
+      var dayNum = document.createElement('div');
+      dayNum.className = 'cal-day-num'; dayNum.textContent = day;
+      cell.appendChild(dayNum);
+
+      tasks.filter(function(t) { return t.dueDate === dateStr; }).forEach(function(t) {
+        var tel = document.createElement('div');
+        tel.className = 'cal-task' + (t.completed ? ' completed' : (dateStr < todayStr() ? ' overdue' : ''));
+        tel.textContent = t.title;
+        cell.appendChild(tel);
+      });
+      grid.appendChild(cell);
+    }
+  }
+
+  function render() {
+    updateMascotAndBubble();
+    if (currentView === 'list') {
+      listWrapper.style.display = 'block';
+      calendarView.style.display = 'none';
+      renderList();
+    } else {
+      listWrapper.style.display = 'none';
+      calendarView.style.display = 'block';
+      renderCalendar();
+    }
+  }
+
+  function addTask() {
+    var title = titleInput.value.trim();
+    if (!title) return;
+    tasks.push({
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      title: title,
+      pace: selectedPace,
+      dueDate: dueInput.value || null,
+      recur: recurInput.value || '',
+      completed: false,
+      createdAt: Date.now()
+    });
+    titleInput.value = ''; dueInput.value = ''; recurInput.value = '';
+    addBtn.disabled = true;
+    save(); render(); titleInput.focus();
+  }
+
+  function toggleTask(id) {
+    var t = tasks.find(function(x) { return x.id === id; });
+    if (!t) return;
+    if (!t.completed) {
+      t.completed = true;
+      // Auto-generate next recurrence if applicable
+      if (t.recur && t.dueDate) {
+        var d = new Date(t.dueDate + 'T00:00:00');
+        if (t.recur === 'daily') d.setDate(d.getDate() + 1);
+        if (t.recur === 'weekly') d.setDate(d.getDate() + 7);
+        if (t.recur === 'monthly') d.setMonth(d.getMonth() + 1);
+        
+        var newDateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        tasks.push({
+          id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+          title: t.title,
+          pace: t.pace,
+          dueDate: newDateStr,
+          recur: t.recur,
+          completed: false,
+          createdAt: Date.now()
+        });
+      }
+    } else {
+      t.completed = false;
+    }
+    save(); render();
+  }
+
+  function updateTitle(id, newTitle) {
+    var t = tasks.find(function(x) { return x.id === id; });
+    if (!t) return;
+    t.title = newTitle;
+    save(); render();
+  }
+
+  function deleteTask(id) {
+    tasks = tasks.filter(function(x) { return x.id !== id; });
+    save(); render();
+  }
+
+  function clearCompleted() {
+    var before = tasks.length;
+    tasks = tasks.filter(function(x) { return !x.completed; });
+    if (tasks.length !== before) { save(); render(); }
+  }
+
+  titleInput.addEventListener('input', function() { addBtn.disabled = titleInput.value.trim().length === 0; });
+  titleInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') addTask(); });
+  addBtn.addEventListener('click', addTask);
+
+  pacePicker.addEventListener('click', function(e) {
+    var btn = e.target.closest('.pace-btn');
+    if (!btn) return;
+    selectedPace = btn.getAttribute('data-pace');
+    Array.prototype.forEach.call(pacePicker.querySelectorAll('.pace-btn'), function(b) { b.classList.remove('selected'); });
+    btn.classList.add('selected');
+  });
+
+  searchInput.addEventListener('input', function() { searchTerm = searchInput.value; render(); });
+  sortSelect.addEventListener('change', function() { sortMode = sortSelect.value; render(); });
+
+  tabsEl.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab');
+    if (!btn) return;
+    filter = btn.getAttribute('data-filter');
+    Array.prototype.forEach.call(tabsEl.querySelectorAll('.tab'), function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    render();
+  });
+
+  viewBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      viewBtns.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentView = btn.getAttribute('data-view');
+      render();
+    });
+  });
+
+  document.getElementById('cal-prev').addEventListener('click', function() {
+    calendarDate.setMonth(calendarDate.getMonth() - 1);
+    renderCalendar();
+  });
+  document.getElementById('cal-next').addEventListener('click', function() {
+    calendarDate.setMonth(calendarDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  clearBtn.addEventListener('click', clearCompleted);
+  setMascot('sleepy');
+  load();
+})();
+</script>
+
+</body>
+</html>
