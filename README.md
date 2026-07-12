@@ -1,8 +1,5 @@
 To-Do List Application
 
- https://raghunandana1.github.io/todolist-manager/
-(open this link guys!!!)
-
  
 A frontend task management application designed to track and organize daily activities. 
 The core logic of this application was originally written in C, and the frontend web implementation (HTML, CSS, JavaScript) was generated via AI assistance.
